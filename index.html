@@ -30,8 +30,7 @@
         <a href="#how">How it works</a>
         <a href="#impact">Impact</a>
         <a href="#team">Team</a>
-        <a href="#library">Story Library</a>
-        <a href="#add-story">Add a story</a>
+        <a href="#library">Stories</a>
         <a class="btn btn-small" href="#contact">Get updates</a>
       </nav>
     </div>
@@ -67,10 +66,7 @@
             <li>A yearly virtual showcase to amplify breakthroughs</li>
             <li>Evaluation to measure narrative shifts over time</li>
           </ul>
-          <p class="note">
-            Built at an HBCU and grounded in 7+ years of engaging women in technology through HTU’s Women in Tech student organization.
-          </p>
-        </div>
+          </div>
       </div>
     </section>
 
@@ -198,44 +194,32 @@
 
     <section id="library" class="section">
       <div class="container">
-        <h2>Story Library (coming soon)</h2>
+        <h2>Stories</h2>
         <p>
-          We’re building a public library of stories in multiple formats. This page is ready for your first releases.
+          Browse approved stories below, and submit a new story from the same page.
         </p>
 
-        <div class="story-grid" aria-label="Story placeholders">
-          <article class="story">
-            <h3>Story Title #1</h3>
-            <p class="small">Video • 4–6 min • Transcript</p>
-            <p>Short summary placeholder. Replace with a real story description when ready.</p>
-          </article>
-          <article class="story">
-            <h3>Story Title #2</h3>
-            <p class="small">Audio • 10–15 min • Transcript</p>
-            <p>Short summary placeholder. Replace with a real story description when ready.</p>
-          </article>
-          <article class="story">
-            <h3>Story Title #3</h3>
-            <p class="small">Written profile • 800–1200 words</p>
-            <p>Short summary placeholder. Replace with a real story description when ready.</p>
-          </article>
+        <div class="callout">
+          <h3>Approved stories</h3>
+          <p class="small">Stories marked <strong>Approved</strong> in our submission sheet appear here.</p>
+          <div class="story-controls" aria-label="Story controls">
+            <div class="filter-row" role="group" aria-label="Filter stories by format">
+              <button class="btn-link filter-btn is-active" type="button" data-format="all">All</button>
+              <button class="btn-link filter-btn" type="button" data-format="written">Written</button>
+              <button class="btn-link filter-btn" type="button" data-format="audio">Audio</button>
+              <button class="btn-link filter-btn" type="button" data-format="video">Video</button>
+            </div>
+            <p class="small" id="storyCountNote"></p>
+          </div>
+          <div id="storyList" class="saved-stories" aria-live="polite"></div>
+          <div class="story-actions" style="margin-top:12px;"><button class="btn btn-ghost" type="button" id="loadMoreStories">Load 3 more</button></div>
         </div>
 
-        <p class="note">
-          Tip: If you’d like, I can also generate a simple “add a story” workflow (Google Form + Sheet) and a script-free way
-          to publish stories.
-        </p>
-      </div>
-    </section>
-
-<section id="add-story" class="section section-alt">
-      <div class="container">
-        <h2>Add a story</h2>
-        <p class="lead">
-          Use this form to submit written stories. Submissions go to our Google Form (saved in a Google Sheet), and approved stories appear below.
-        </p>
-
-        <div class="grid-2">
+        <div class="metrics" style="margin-top:22px;">
+          <h3>Submit a story</h3>
+          <p class="small">
+            Submissions are reviewed before publication. If approved and marked <strong>Approved</strong> in the sheet, your story will appear above.
+          </p>
           <form class="form" id="storyForm" aria-label="Add a story form" action="https://docs.google.com/forms/d/e/1FAIpQLScq7hexO3oSK0KwdCOdBy4JWKB4ydtv82zM_6jrPI1EJSNfRQ/formResponse" method="POST" target="hidden_iframe">
             <label>
               <span>Story title</span>
@@ -290,15 +274,14 @@
           </form>
 
           <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-
-          <div class="callout">
-            <h3>Saved stories</h3>
-            <p class="small">Stories you save will appear here and remain available in this browser.</p>
-            <div id="storyList" class="saved-stories" aria-live="polite"></div>
-          </div>
+          <p class="small" style="margin-top:10px;">
+            Privacy note: Do not include sensitive personal information. Email is collected only for follow-up about your submission.
+          </p>
         </div>
       </div>
     </section>
+
+
 
     <section id="contact" class="section section-alt">
       <div class="container">
@@ -322,7 +305,8 @@
 
         <div class="contact-box">
           <h3>Contact</h3>
-          <p class="small">Replace with your preferred inbox when ready:</p>
+          <p class="small">Email:
+          </p>
           <p><a href="mailto:acprimo@htu.edu">acprimo@htu.edu</a></p>
         </div>
       </div>
@@ -429,33 +413,73 @@
 
         // Store in memory for modal viewing
         window.__PUBLIC_STORIES__ = stories;
-
-        list.innerHTML = stories.map((s, i) => {
-          const safeTitle = escapeHtml(s.title || "Story");
-          const safeFormat = escapeHtml(s.format || "");
-          const safeSummary = escapeHtml(s.summary || "");
-          const safeAuthor = escapeHtml(s.author || "");
-          const safeTime = escapeHtml(s.timestamp || "");
-          const metaParts = [safeFormat, safeAuthor, safeTime].filter(Boolean).join(" • ");
-
-          return `
-            <div class="story-item">
-              <h4>${safeTitle}</h4>
-              <p class="story-meta">${metaParts}</p>
-              <p class="small">${safeSummary}</p>
-              <div class="story-actions">
-                <button class="btn-link" type="button" onclick="openPublicStory(${i})">Read full story</button>
-              </div>
-            </div>
-          `;
-        }).join("");
-
-      }catch(e){
+        window.__STORY_FILTER__ = window.__STORY_FILTER__ || 'all';
+        window.__STORY_LIMIT__ = window.__STORY_LIMIT__ || 3;
+        renderFilteredStories();
+}catch(e){
         list.innerHTML = '<p class="small">Could not load stories yet. Once the Google Sheet is published to the web, they will appear here.</p>';
       }
     }
 
-    function openPublicStory(i){
+    function normalizeFormat(fmt){
+      const f = (fmt || "").toLowerCase();
+      if(f.includes("audio")) return "audio";
+      if(f.includes("video")) return "video";
+      return "written";
+    }
+
+    function renderFilteredStories(){
+      const list = document.getElementById("storyList");
+      const note = document.getElementById("storyCountNote");
+      const btn = document.getElementById("loadMoreStories");
+      const all = window.__PUBLIC_STORIES__ || [];
+      const filter = window.__STORY_FILTER__ || "all";
+      const limit = window.__STORY_LIMIT__ || 3;
+
+      const filtered = all.filter(s => filter === "all" ? true : normalizeFormat(s.format) === filter);
+
+      if(note){
+        note.textContent = filtered.length === 0
+          ? "No approved stories match this filter yet."
+          : `Showing ${Math.min(limit, filtered.length)} of ${filtered.length} approved stories.`;
+      }
+
+      if(!list) return;
+
+      if(filtered.length === 0){
+        list.innerHTML = '<p class="small">No stories to show yet.</p>';
+        if(btn) btn.style.display = "none";
+        return;
+      }
+
+      const slice = filtered.slice(0, limit);
+      list.innerHTML = slice.map((s) => {
+        const originalIndex = all.indexOf(s);
+        const safeTitle = escapeHtml(s.title || "Story");
+        const safeFormat = escapeHtml(s.format || "");
+        const safeSummary = escapeHtml(s.summary || "");
+        const safeAuthor = escapeHtml(s.author || "");
+        const safeTime = escapeHtml(s.timestamp || "");
+        const metaParts = [safeFormat, safeAuthor, safeTime].filter(Boolean).join(" • ");
+
+        return `
+          <div class="story-item">
+            <h4>${safeTitle}</h4>
+            <p class="story-meta">${metaParts}</p>
+            <p class="small">${safeSummary}</p>
+            <div class="story-actions">
+              <button class="btn-link" type="button" onclick="openPublicStory(${originalIndex})">Read full story</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      if(btn){
+        btn.style.display = (limit < filtered.length) ? "inline-flex" : "none";
+      }
+    }
+
+function openPublicStory(i){
       const s = (window.__PUBLIC_STORIES__ || [])[i];
       if(!s) return;
 
@@ -485,6 +509,28 @@
 
       if(resetBtn){
         resetBtn.addEventListener("click", () => form?.reset());
+      }
+
+      // Filter buttons
+      document.querySelectorAll(".filter-btn").forEach((b) => {
+        b.addEventListener("click", () => {
+          window.__STORY_FILTER__ = b.dataset.format || "all";
+          window.__STORY_LIMIT__ = 3;
+
+          document.querySelectorAll(".filter-btn").forEach(x => x.classList.remove("is-active"));
+          b.classList.add("is-active");
+
+          renderFilteredStories();
+        });
+      });
+
+      // Pagination
+      const loadMore = document.getElementById("loadMoreStories");
+      if(loadMore){
+        loadMore.addEventListener("click", () => {
+          window.__STORY_LIMIT__ = (window.__STORY_LIMIT__ || 3) + 3;
+          renderFilteredStories();
+        });
       }
 
       fetchStories();
