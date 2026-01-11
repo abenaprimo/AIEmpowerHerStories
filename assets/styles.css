@@ -308,3 +308,11 @@ textarea::placeholder{color: rgba(231,237,246,0.45)}
   color: var(--muted);
 }
 .radio input{margin-top: 3px}
+
+
+.story-controls{margin: 10px 0 12px}
+.filter-row{display:flex; gap:10px; flex-wrap:wrap}
+.filter-btn.is-active{
+  border-color: rgba(242,193,78,0.65);
+  box-shadow: 0 0 0 2px rgba(122,0,25,0.20);
+}
